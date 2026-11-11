@@ -19,8 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/start-app
 
       # Smoke runs first as a quick gate: if the critical path is broken, regression is skipped.
@@ -52,7 +52,7 @@ jobs:
 
       # Quarantined tests still run so their state stays visible, but they never block a merge.
       - name: Run quarantined tests (non-blocking)
-        if: success()
+        if: ${{ !cancelled() }}
         continue-on-error: true
         run: npm run test:quarantine
         env:
@@ -68,7 +68,7 @@ jobs:
 
       - name: Upload Playwright reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-reports
           path: reports/*-html/
@@ -76,7 +76,7 @@ jobs:
 
       - name: Upload traces, screenshots and videos
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results
           path: test-results/

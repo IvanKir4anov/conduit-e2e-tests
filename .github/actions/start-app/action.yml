@@ -3,7 +3,7 @@ description: Install dependencies and the browser, build the pinned app in Docke
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v7
       with:
         node-version: 22
         cache: npm
@@ -11,7 +11,7 @@ runs:
       shell: bash
     - run: npx playwright install --with-deps chromium
       shell: bash
-    - uses: docker/setup-buildx-action@v3
+    - uses: docker/setup-buildx-action@v4
     # A fresh runner means a fresh Docker volume: every run starts with an empty database.
     - run: npm run env:up
       shell: bash

@@ -17,7 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      # The token has issues: write here; do not leave it in .git/config for test code to read.
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/start-app
 
       - name: Run all tests three times, failing on flaky
@@ -33,6 +36,7 @@ jobs:
         continue-on-error: true
         run: npm run test:quarantine -- --repeat-each=3
         env:
+          STRICT: '1' # the exit criterion for quarantine: three clean runs, flaky counts as failed
           PW_HTML_REPORT: reports/quarantine-html
           PW_JSON_REPORT: reports/quarantine.json
 
@@ -42,7 +46,7 @@ jobs:
 
       - name: Upload Playwright reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nightly-reports
           path: reports/*-html/
