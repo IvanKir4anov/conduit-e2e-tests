@@ -44,28 +44,29 @@ npm run report      # open the HTML report
 Tests are tagged by purpose: `@smoke` is the critical path that must never break; `@regression` is
 everything else. In CI smoke runs first, and regression runs only if smoke passes.
 
-| Area     | Scenario                                                                       | Level       | Tag        |
-| -------- | ------------------------------------------------------------------------------ | ----------- | ---------- |
-| Stack    | Frontend and API are served from one origin                                    | API         | smoke      |
-| Accounts | Register and sign in with the same credentials                                 | API         | smoke      |
-|          | Sign in through the form                                                       | UI          | smoke      |
-|          | Wrong password is rejected                                                     | API, UI     | regression |
-|          | Sign up through the form; account usable via API                               | UI          | regression |
-|          | Taken username / taken email are rejected                                      | UI          | regression |
-|          | Update bio in settings, see it on the profile                                  | UI          | regression |
-|          | Sign out, stay signed out after reload                                         | UI          | regression |
-| Articles | Create, read, delete                                                           | API         | smoke      |
-|          | Publish from the editor; saved data checked via API                            | UI          | smoke      |
-|          | Edit own article                                                               | UI          | regression |
-|          | Delete own article                                                             | UI          | regression |
-|          | Other users see no edit / delete controls                                      | UI          | regression |
-|          | Filter by tag and by author                                                    | API         | regression |
-| Social   | Comment on another user's article                                              | Hybrid      | smoke      |
-|          | Comment via API                                                                | API         | regression |
-|          | Favorite / unfavorite: flag and counter                                        | API, hybrid | regression |
-|          | Follow an author: their article appears in the feed, disappears after unfollow | API, hybrid | regression |
-| Guests   | Read an article; commenting requires sign-in                                   | UI          | regression |
-|          | Editor redirects to sign in                                                    | UI          | regression |
+| Area     | Scenario                                            | Level       | Tag        |
+| -------- | --------------------------------------------------- | ----------- | ---------- |
+| Stack    | Frontend and API are served from one origin         | API         | smoke      |
+| Accounts | Register and sign in with the same credentials      | API         | smoke      |
+|          | Sign in through the form                            | UI          | smoke      |
+|          | Wrong password is rejected                          | API, UI     | regression |
+|          | Sign up through the form; account usable via API    | UI          | regression |
+|          | Taken username / taken email are rejected           | UI          | regression |
+|          | Update bio in settings, see it on the profile       | UI          | regression |
+|          | Sign out, stay signed out after reload              | UI          | regression |
+| Articles | Create, read, delete                                | API         | smoke      |
+|          | Publish from the editor; saved data checked via API | UI          | smoke      |
+|          | Edit own article                                    | UI          | regression |
+|          | Delete own article                                  | UI          | regression |
+|          | Other users see no edit / delete controls           | UI          | regression |
+|          | Filter by tag and by author                         | API         | regression |
+| Social   | Comment on another user's article                   | Hybrid      | smoke      |
+|          | Comment via API                                     | API         | regression |
+|          | Favorite / unfavorite: flag and counter             | API, hybrid | regression |
+|          | Follow an author: their article appears in the feed | API, hybrid | regression |
+|          | Unfollow: the article leaves the feed               | API         | regression |
+| Guests   | Read an article; commenting requires sign-in        | UI          | regression |
+|          | Editor redirects to sign in                         | UI          | regression |
 
 _Hybrid_ means the data is prepared through the API and only the behaviour under test goes
 through the browser. This keeps UI tests short and focused.
@@ -128,13 +129,16 @@ holds data from earlier runs.
 3. **No cross-worker conflicts.** Rule for tests on shared lists (feed, tags): look for the
    test's own data, never assert on position or count.
 4. **Sessions per test.** The token comes from the API and is injected into the browser.
-5. **Cleanup.** Fixtures delete what they create, including articles created through the UI
-   (registered for deletion right after creation, so they are removed even if the test fails). Users cannot be deleted in RealWorld, so
+5. **Cleanup.** Fixtures delete what they create. Articles created inside a test are registered
+   for deletion as soon as their slug is known, so they are removed even if a later assertion
+   fails. Users cannot be deleted in RealWorld, so
    isolation relies on uniqueness. In CI every run starts on a fresh runner with an empty
    database; locally, `npm run env:reset` gives the same clean state.
 
-Checked by running the suite repeatedly in parallel:
-`npx playwright test --repeat-each=3 --workers=4`.
+Checked by running the suite repeatedly in parallel, e.g.
+`npx playwright test --repeat-each=5 --workers=6`. Keep workers at or below the number of CPU
+cores: all workers share one SQLite backend, and heavy oversubscription makes writes slow enough
+to hit the default 5-second assertion timeout.
 
 ## Reliability approach
 
