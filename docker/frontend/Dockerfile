@@ -6,7 +6,7 @@
 ARG FRONTEND_REPO=https://github.com/realworld-apps/angular-realworld-example-app.git
 ARG FRONTEND_SHA=d426ec804f7d035c374aa4a1b48ecdb05a03eb02
 
-FROM oven/bun:1 AS build
+FROM oven/bun:1.4.4 AS build
 ARG FRONTEND_REPO
 ARG FRONTEND_SHA
 WORKDIR /app
@@ -24,6 +24,6 @@ RUN grep -qF "${UPSTREAM_API}" "${INTERCEPTOR}" \
 RUN bun install --frozen-lockfile && bun run build \
  && if grep -rq "realworld.show" dist/; then echo "External API URL left in the build output" >&2; exit 1; fi
 
-FROM nginx:1.27-alpine
+FROM nginx:1.27.5-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist/angular-conduit/browser /usr/share/nginx/html
