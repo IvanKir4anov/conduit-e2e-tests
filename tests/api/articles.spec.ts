@@ -1,18 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { ConduitApi } from '../../src/api/conduit-api';
-
-const unique = () => `u${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+import { buildArticle, buildUser } from '../../src/data/factories';
 
 test.describe('Articles API', () => {
   test('creates, reads and deletes an article @smoke', async ({ request }) => {
-    const username = unique();
-    const author = await new ConduitApi(request).register({
-      username,
-      email: `${username}@example.test`,
-      password: `P-${unique()}`,
-    });
+    const author = await new ConduitApi(request).register(buildUser());
     const api = new ConduitApi(request, author.token);
-    const input = { title: `Article ${unique()}`, description: 'About testing', body: 'Body text' };
+    const input = buildArticle();
 
     const created = await api.createArticle(input);
     expect(created.slug).toBeTruthy();
