@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { buildArticle, buildUser } from '../../src/data/factories';
 
-test('generates unique users and articles @smoke', () => {
+test('generates unique users and articles', () => {
   const users = Array.from({ length: 1000 }, () => buildUser());
   expect(new Set(users.map((u) => u.username)).size).toBe(1000);
   expect(new Set(users.map((u) => u.email)).size).toBe(1000);

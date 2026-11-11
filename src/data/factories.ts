@@ -32,6 +32,10 @@ export function buildUser(overrides: Partial<NewUser> = {}): NewUser {
   };
 }
 
+/**
+ * The backend derives the slug from the title. Keep overridden titles short and unique:
+ * a long common prefix could make slugs collide if the backend ever truncates them.
+ */
 export function buildArticle(overrides: Partial<NewArticle> = {}): NewArticle {
   return {
     title: `Article ${uniqueId('a')}`,
