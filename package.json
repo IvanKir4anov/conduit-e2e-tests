@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "description": "End-to-end test suite for the RealWorld Conduit app — Playwright, TypeScript, Docker, GitHub Actions",
   "scripts": {
-    "test": "playwright test",
-    "test:smoke": "playwright test --grep @smoke",
-    "test:regression": "playwright test --grep-invert @smoke",
+    "test": "playwright test --grep-invert @quarantine",
+    "test:smoke": "playwright test --grep @smoke --grep-invert @quarantine",
+    "test:regression": "playwright test --grep-invert \"@smoke|@quarantine\"",
+    "test:quarantine": "playwright test --grep @quarantine --pass-with-no-tests",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",

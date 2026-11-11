@@ -13,6 +13,8 @@ export default defineConfig({
   forbidOnly: isCI,
   // One retry in CI: a test that passes only on retry is reported as flaky, not hidden.
   retries: isCI ? 1 : 0,
+  // The nightly run is strict: a flaky test fails it (see docs/stability.md).
+  failOnFlakyTests: process.env.STRICT === '1',
   reporter: isCI
     ? [
         ['list'],
