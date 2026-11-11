@@ -1,0 +1,23 @@
+name: conduit
+
+services:
+  backend:
+    # Upstream ASP.NET Core RealWorld API, built from a pinned commit.
+    build:
+      context: https://github.com/realworld-apps/aspnetcore-realworld-example-app.git#9345f18abf36b778abe2f290467ba432bf1f7e5c
+    environment:
+      - Jwt__SigningKey=${Jwt__SigningKey:?Run `npm run env:up` to create .env with a signing key}
+      - Database__Provider=sqlite
+      - ConnectionStrings__Conduit=Data Source=/data/realworld.db
+    volumes:
+      - conduit-data:/data
+
+  frontend:
+    build: ./docker/frontend
+    ports:
+      - '8080:80'
+    depends_on:
+      - backend
+
+volumes:
+  conduit-data:
