@@ -65,10 +65,14 @@ export { expect };
 /**
  * Injects the session the way the app stores it (localStorage `jwtToken`) and checks the UI
  * picked it up. The token was just issued by the API, so no extra validation request is made.
+ * The init script runs on every navigation, so a sessionStorage flag makes it inject only
+ * once: after a logout in the test, the user stays logged out.
  */
 export async function signInAs(page: Page, user: User): Promise<void> {
   await page.addInitScript((token) => {
+    if (window.sessionStorage.getItem('e2e-session-injected')) return;
     window.localStorage.setItem('jwtToken', token);
+    window.sessionStorage.setItem('e2e-session-injected', '1');
   }, user.token);
   await page.goto('/');
   await expect(new Header(page).userLink(user.username)).toBeVisible();

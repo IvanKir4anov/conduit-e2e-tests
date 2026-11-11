@@ -2,8 +2,13 @@ import type { Locator, Page } from '@playwright/test';
 
 export class ArticlePage {
   readonly title: Locator;
+  readonly favoriteButton: Locator;
+  readonly unfavoriteButton: Locator;
+  readonly editLink: Locator;
+  readonly deleteButton: Locator;
+  readonly commentInput: Locator;
+  readonly signInToCommentLink: Locator;
   private readonly banner: Locator;
-  private readonly commentInput: Locator;
   private readonly postCommentButton: Locator;
 
   constructor(private readonly page: Page) {
@@ -11,6 +16,15 @@ export class ArticlePage {
     // Author info is rendered twice (banner and below the body); the banner has no landmark
     // role, so its class scopes the lookup.
     this.banner = page.locator('.banner');
+    // Article actions are rendered twice (banner and below the body); the banner copy is used.
+    // Accessible names start with an icon glyph, hence the leading \W*.
+    this.favoriteButton = this.banner.getByRole('button', { name: /^\W*Favorite Article/ });
+    this.unfavoriteButton = this.banner.getByRole('button', { name: /^\W*Unfavorite Article/ });
+    this.editLink = this.banner.getByRole('link', { name: /Edit Article/ });
+    this.deleteButton = this.banner.getByRole('button', { name: /Delete Article/ });
+    this.signInToCommentLink = page
+      .getByText(/to add comments on this article/)
+      .getByRole('link', { name: 'Sign in' });
     this.commentInput = page.getByRole('textbox', { name: 'Write a comment...' });
     this.postCommentButton = page.getByRole('button', { name: 'Post Comment' });
   }

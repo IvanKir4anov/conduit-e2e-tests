@@ -12,7 +12,7 @@ test.describe('Sign in', () => {
     await expect(page).toHaveURL('/');
   });
 
-  test('shows an error for a wrong password @smoke', async ({ page, user }) => {
+  test('shows an error for a wrong password @regression', async ({ page, user }) => {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
     await loginPage.signIn(user.email, 'wrong-password');
