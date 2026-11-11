@@ -23,7 +23,7 @@ Requirements: Node.js 22+, Docker with Compose v2.
 
 ```bash
 npm ci
-npx playwright install chromium
+npx playwright install chromium   # on Linux: --with-deps chromium
 npm run env:up      # builds and starts the app at http://localhost:8080, waits until ready
 npm test            # all tests;  npm run test:smoke for the smoke set
 npm run report      # open the HTML report
@@ -89,10 +89,11 @@ holds data from earlier runs.
 1. **Unique data.** Each test creates its own users and articles. Ids combine the worker index,
    a timestamp, a counter and random characters. There are no shared accounts.
 2. **No order dependencies.** `fullyParallel: true`; `test.describe.serial` is banned by lint.
-3. **No cross-worker conflicts.** Shared lists (feed, tags) are checked only for the test's own
-   data, never by position or count.
+3. **No cross-worker conflicts.** Rule for tests on shared lists (feed, tags): look for the
+   test's own data, never assert on position or count.
 4. **Sessions per test.** The token comes from the API and is injected into the browser.
-5. **Cleanup.** Fixtures delete what they create. Users cannot be deleted in RealWorld, so
+5. **Cleanup.** Fixtures delete what they create, including articles created through the UI
+   (registered for deletion right after creation, so they are removed even if the test fails). Users cannot be deleted in RealWorld, so
    isolation relies on uniqueness. In CI every run starts on a fresh runner with an empty
    database; locally, `npm run env:reset` gives the same clean state.
 
@@ -103,8 +104,8 @@ Checked by running the suite repeatedly in parallel:
 
 - No fixed waits (`waitForTimeout` is a lint error); only web-first assertions that retry until
   the condition holds.
-- The app is started and checked for readiness (`GET /api/tags`) before tests run, so tests never
-  hit a half-started stack.
+- `npm run env:up` (used locally and in CI) waits until the API answers (`GET /api/tags`) before
+  returning, so tests never hit a half-started stack.
 - **One retry in CI.** A test that passes only on retry does not fail the build, but it is marked
   as _flaky_ in the report and in the job summary. A flaky test is a defect to fix, not noise to
   live with. A test that cannot be fixed quickly goes into quarantine (a separate, non-blocking
@@ -119,7 +120,7 @@ Checked by running the suite repeatedly in parallel:
 4. Backend and nginx logs are printed by the `Application logs` step.
 
 Traces record network traffic, so they contain the disposable credentials of the users a test
-created (random passwords, short-lived tokens for a throwaway database). No real secret ever
+created (random passwords and tokens for a throwaway database). No real secret ever
 reaches the tests: the only one, the backend's JWT signing key, is generated into the git-ignored
 `.env` and never logged.
 
