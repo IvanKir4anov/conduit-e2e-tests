@@ -1,0 +1,17 @@
+name: Start application under test
+description: Install dependencies and the browser, build the pinned app in Docker and wait until it is ready.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: npm
+    - run: npm ci
+      shell: bash
+    - run: npx playwright install --with-deps chromium
+      shell: bash
+    - uses: docker/setup-buildx-action@v3
+    # A fresh runner means a fresh Docker volume: every run starts with an empty database.
+    - run: npm run env:up
+      shell: bash

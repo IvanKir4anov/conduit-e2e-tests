@@ -1,0 +1,72 @@
+name: Nightly
+
+# Strict run against a fresh environment: every test three times, and a flaky test fails the
+# run. It catches instability that a single run with one retry would let through.
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  strict:
+    name: strict
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/start-app
+
+      - name: Run all tests three times, failing on flaky
+        run: npx playwright test --grep-invert @quarantine --repeat-each=3
+        env:
+          STRICT: '1'
+          PW_HTML_REPORT: reports/strict-html
+          PW_JSON_REPORT: reports/strict.json
+
+      # Shows whether quarantined tests have recovered; does not affect the result.
+      - name: Run quarantined tests (informational)
+        if: always()
+        continue-on-error: true
+        run: npm run test:quarantine -- --repeat-each=3
+        env:
+          PW_HTML_REPORT: reports/quarantine-html
+          PW_JSON_REPORT: reports/quarantine.json
+
+      - name: Write job summary
+        if: always()
+        run: node scripts/ci-summary.mjs Strict=reports/strict.json Quarantine=reports/quarantine.json
+
+      - name: Upload Playwright reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-reports
+          path: reports/*-html/
+          retention-days: 14
+
+      - name: Application logs
+        if: failure()
+        run: docker compose logs --tail=200
+
+      # A failed nightly must not go unnoticed: open (or comment on) a tracking issue.
+      - name: Report failure as an issue
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Nightly run failed"
+          existing=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --title "$title" --body "The strict nightly run failed: $RUN_URL"
+          fi
+
+      - name: Stop application
+        if: always()
+        run: npm run env:down
