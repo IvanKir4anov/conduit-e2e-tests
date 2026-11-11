@@ -23,7 +23,21 @@ export interface NewArticle {
 
 export interface Profile {
   username: string;
+  bio: string | null;
+  image: string | null;
   following: boolean;
+}
+
+export type UserUpdate = Partial<Pick<NewUser, 'username' | 'email' | 'password'>> & {
+  bio?: string;
+  image?: string;
+};
+
+export interface ArticleQuery {
+  tag?: string;
+  author?: string;
+  favorited?: string;
+  limit?: number;
 }
 
 export interface Article {

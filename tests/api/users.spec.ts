@@ -17,7 +17,7 @@ test.describe('Users API', () => {
     expect(current.email).toBe(input.email);
   });
 
-  test('rejects login with a wrong password @smoke', async ({ api, user }) => {
+  test('rejects login with a wrong password @regression', async ({ api, user }) => {
     await expect(api.login(user.email, 'wrong-password')).rejects.toMatchObject({
       constructor: ApiError,
       status: 401,

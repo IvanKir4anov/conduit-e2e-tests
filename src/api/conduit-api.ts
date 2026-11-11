@@ -1,6 +1,15 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test';
 import { env } from '../config/env';
-import type { Article, Comment, NewArticle, NewUser, User } from './types';
+import type {
+  Article,
+  ArticleQuery,
+  Comment,
+  NewArticle,
+  NewUser,
+  Profile,
+  User,
+  UserUpdate,
+} from './types';
 
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -45,6 +54,36 @@ export class ConduitApi {
     return (await this.send<{ user: User }>('GET', '/user')).user;
   }
 
+  async updateUser(changes: UserUpdate): Promise<User> {
+    return (await this.send<{ user: User }>('PUT', '/user', { user: changes })).user;
+  }
+
+  async getProfile(username: string): Promise<Profile> {
+    return (await this.send<{ profile: Profile }>('GET', `/profiles/${username}`)).profile;
+  }
+
+  // The backend rejects these POSTs without a body (400), so an empty JSON object is sent.
+  async follow(username: string): Promise<Profile> {
+    return (await this.send<{ profile: Profile }>('POST', `/profiles/${username}/follow`, {}))
+      .profile;
+  }
+
+  async unfollow(username: string): Promise<Profile> {
+    return (await this.send<{ profile: Profile }>('DELETE', `/profiles/${username}/follow`))
+      .profile;
+  }
+
+  async listArticles(query: ArticleQuery = {}): Promise<Article[]> {
+    const params = new URLSearchParams(
+      Object.entries(query).map(([key, value]) => [key, String(value)]),
+    );
+    return (await this.send<{ articles: Article[] }>('GET', `/articles?${params}`)).articles;
+  }
+
+  async feed(): Promise<Article[]> {
+    return (await this.send<{ articles: Article[] }>('GET', '/articles/feed')).articles;
+  }
+
   async createArticle(article: NewArticle): Promise<Article> {
     return (await this.send<{ article: Article }>('POST', '/articles', { article })).article;
   }
@@ -55,6 +94,15 @@ export class ConduitApi {
 
   async deleteArticle(slug: string): Promise<void> {
     await this.send('DELETE', `/articles/${slug}`);
+  }
+
+  async favorite(slug: string): Promise<Article> {
+    return (await this.send<{ article: Article }>('POST', `/articles/${slug}/favorite`, {}))
+      .article;
+  }
+
+  async unfavorite(slug: string): Promise<Article> {
+    return (await this.send<{ article: Article }>('DELETE', `/articles/${slug}/favorite`)).article;
   }
 
   /** Cleanup helper: deletes the article, treating "already gone" (404) as success. */
@@ -84,7 +132,8 @@ export class ConduitApi {
     if (!response.ok()) {
       throw new ApiError(method, url, response.status(), await safeText(response));
     }
-    return (response.status() === 204 ? undefined : await response.json()) as T;
+    const text = await response.text();
+    return (text ? JSON.parse(text) : undefined) as T;
   }
 }
 

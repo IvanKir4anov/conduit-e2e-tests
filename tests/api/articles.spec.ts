@@ -18,7 +18,7 @@ test.describe('Articles API', () => {
     });
   });
 
-  test('comments on an article prepared by a fixture @smoke', async ({ article, userApi }) => {
+  test('comments on an article prepared by a fixture @regression', async ({ article, userApi }) => {
     const comment = await userApi.addComment(article.slug, 'Looks good');
     expect(comment.body).toBe('Looks good');
   });
