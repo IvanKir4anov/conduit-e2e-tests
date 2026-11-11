@@ -3,10 +3,15 @@ import { buildArticle } from '../../src/data/factories';
 import { expect, test } from '../../src/fixtures';
 
 test.describe('Articles API', () => {
-  test('creates, reads and deletes an article @smoke', async ({ user, userApi }) => {
+  test('creates, reads and deletes an article @smoke', async ({
+    user,
+    userApi,
+    deleteAfterTest,
+  }) => {
     const input = buildArticle();
 
     const created = await userApi.createArticle(input);
+    deleteAfterTest(created.slug); // in case an assertion fails before the delete below
     expect(created.slug).toBeTruthy();
     expect(created.author.username).toBe(user.username);
     expect((await userApi.getArticle(created.slug)).title).toBe(input.title);
@@ -21,5 +26,9 @@ test.describe('Articles API', () => {
   test('comments on an article prepared by a fixture @regression', async ({ article, userApi }) => {
     const comment = await userApi.addComment(article.slug, 'Looks good');
     expect(comment.body).toBe('Looks good');
+
+    // Read it back: the response alone would not prove the comment was stored.
+    const stored = await userApi.listComments(article.slug);
+    expect(stored).toContainEqual(expect.objectContaining({ id: comment.id, body: 'Looks good' }));
   });
 });

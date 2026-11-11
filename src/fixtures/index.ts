@@ -19,8 +19,8 @@ interface Fixtures {
   /** An article by `user`, created via the API and deleted after the test. */
   article: Article;
   /**
-   * Registers an article created through the UI for deletion after the test, even if the
-   * test fails. Call it as soon as the slug is known, before any assertion.
+   * Registers an article for deletion after the test, even if the test fails. Call it as
+   * soon as the slug is known, before any assertion. Already-deleted articles are ignored.
    */
   deleteAfterTest: (slug: string) => void;
   /** Browser page already signed in as `user` (session injected, no UI login). */
@@ -67,6 +67,7 @@ export { expect };
  * picked it up. The token was just issued by the API, so no extra validation request is made.
  * The init script runs on every navigation, so a sessionStorage flag makes it inject only
  * once: after a logout in the test, the user stays logged out.
+ * Call it at most once per page; to act as another user, use a new page or browser context.
  */
 export async function signInAs(page: Page, user: User): Promise<void> {
   await page.addInitScript((token) => {

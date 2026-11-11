@@ -96,6 +96,10 @@ export class ConduitApi {
     await this.send('DELETE', `/articles/${slug}`);
   }
 
+  async listComments(slug: string): Promise<Comment[]> {
+    return (await this.send<{ comments: Comment[] }>('GET', `/articles/${slug}/comments`)).comments;
+  }
+
   async favorite(slug: string): Promise<Article> {
     return (await this.send<{ article: Article }>('POST', `/articles/${slug}/favorite`, {}))
       .article;

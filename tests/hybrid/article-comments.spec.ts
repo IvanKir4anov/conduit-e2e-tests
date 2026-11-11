@@ -15,4 +15,9 @@ test('reader comments on an article created via API @smoke', async ({ api, artic
 
   await expect(articlePage.comment(text)).toBeVisible();
   await expect(articlePage.commentAuthor(text)).toHaveText(reader.username);
+
+  // The page renders the comment from the POST response; a reload proves it was stored.
+  await page.reload();
+  await expect(articlePage.comment(text)).toBeVisible();
+  await expect(articlePage.commentAuthor(text)).toHaveText(reader.username);
 });
