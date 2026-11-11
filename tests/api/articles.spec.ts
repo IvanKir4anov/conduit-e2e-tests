@@ -1,19 +1,21 @@
-import { expect, test } from '@playwright/test';
-import { ConduitApi } from '../../src/api/conduit-api';
-import { buildArticle, buildUser } from '../../src/data/factories';
+import { buildArticle } from '../../src/data/factories';
+import { expect, test } from '../../src/fixtures';
 
 test.describe('Articles API', () => {
-  test('creates, reads and deletes an article @smoke', async ({ request }) => {
-    const author = await new ConduitApi(request).register(buildUser());
-    const api = new ConduitApi(request, author.token);
+  test('creates, reads and deletes an article @smoke', async ({ user, userApi }) => {
     const input = buildArticle();
 
-    const created = await api.createArticle(input);
+    const created = await userApi.createArticle(input);
     expect(created.slug).toBeTruthy();
-    expect(created.author.username).toBe(author.username);
-    expect((await api.getArticle(created.slug)).title).toBe(input.title);
+    expect(created.author.username).toBe(user.username);
+    expect((await userApi.getArticle(created.slug)).title).toBe(input.title);
 
-    await api.deleteArticle(created.slug);
-    await expect(api.getArticle(created.slug)).rejects.toThrow(/404/);
+    await userApi.deleteArticle(created.slug);
+    await expect(userApi.getArticle(created.slug)).rejects.toThrow(/404/);
+  });
+
+  test('comments on an article prepared by a fixture @smoke', async ({ article, userApi }) => {
+    const comment = await userApi.addComment(article.slug, 'Looks good');
+    expect(comment.body).toBe('Looks good');
   });
 });

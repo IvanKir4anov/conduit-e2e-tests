@@ -1,10 +1,8 @@
-import { expect, test } from '@playwright/test';
-import { ConduitApi } from '../../src/api/conduit-api';
 import { buildUser } from '../../src/data/factories';
+import { expect, test } from '../../src/fixtures';
 
 test.describe('Users API', () => {
-  test('registers a user and logs in with the same credentials @smoke', async ({ request }) => {
-    const api = new ConduitApi(request);
+  test('registers a user and logs in with the same credentials @smoke', async ({ api }) => {
     const input = buildUser();
 
     const registered = await api.register(input);
@@ -18,11 +16,7 @@ test.describe('Users API', () => {
     expect(current.email).toBe(input.email);
   });
 
-  test('rejects login with a wrong password @smoke', async ({ request }) => {
-    const api = new ConduitApi(request);
-    const input = buildUser();
-    await api.register(input);
-
-    await expect(api.login(input.email, 'wrong-password')).rejects.toThrow(/401|403|422/);
+  test('rejects login with a wrong password @smoke', async ({ api, user }) => {
+    await expect(api.login(user.email, 'wrong-password')).rejects.toThrow(/401|403|422/);
   });
 });
