@@ -1,0 +1,33 @@
+{
+  "name": "conduit-e2e-tests",
+  "version": "0.1.0",
+  "description": "End-to-end test suite for the RealWorld Conduit app — Playwright, TypeScript, Docker, GitHub Actions",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "env:up": "bash scripts/env-up.sh",
+    "env:down": "docker compose down",
+    "env:reset": "docker compose down -v && bash scripts/env-up.sh",
+    "report": "playwright show-report"
+  },
+  "author": "Ivan Kirchanov",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^26.6.6",
+    "eslint": "^10.14.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-playwright": "^2.12.2",
+    "prettier": "^3.10.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.2"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
+}
