@@ -55,7 +55,7 @@ everything else. In CI smoke runs first, and regression runs only if smoke passe
 |          | Wrong password is rejected                          | API, UI     | regression |
 |          | Sign up through the form; account usable via API    | UI          | regression |
 |          | Taken username / taken email are rejected           | UI          | regression |
-|          | Update bio in settings, see it on the profile       | UI          | regression |
+|          | Update bio in settings, see it on the profile       | API, UI     | regression |
 |          | Sign out, stay signed out after reload              | UI          | regression |
 | Articles | Create, read, delete                                | API         | smoke      |
 |          | Publish from the editor; saved data checked via API | UI          | smoke      |
@@ -154,7 +154,7 @@ to hit the default 5-second assertion timeout.
   as _flaky_ in the report and in the job summary. A flaky test is a defect to fix, not noise to
   live with.
 - **Strict nightly run.** Every night all tests run three times with `failOnFlakyTests`; a flaky
-  result fails the run and opens an issue.
+  result fails the run, and a failed scheduled run opens an issue.
 - **Quarantine, not skip.** A test that cannot be fixed quickly is tagged `@quarantine` with a
   linked issue. It leaves the blocking runs but keeps running in a non-blocking step, so it stays
   visible until fixed. Full policy: [docs/stability.md](docs/stability.md).
@@ -162,7 +162,8 @@ to hit the default 5-second assertion timeout.
 ## Debugging a failure
 
 1. Open the failed run in **Actions**. The job summary shows passed / failed / flaky counts.
-2. Download the `playwright-reports` artifact (one HTML report for smoke, one for regression) and
+2. Download the `playwright-reports` artifact (one HTML report each for smoke, regression and
+   quarantine) and
    run `npx playwright show-report <folder>`.
 3. Open the failed test's **trace** for the timeline, DOM snapshots, network and console:
    `npx playwright show-trace <path-to-trace.zip>`. Screenshot and video are attached as well.

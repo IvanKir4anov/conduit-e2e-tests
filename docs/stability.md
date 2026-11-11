@@ -9,7 +9,8 @@ means a real problem.
 - **CI** allows one retry. A test that passes only on retry is reported as _flaky_ in the job
   summary and the HTML report. The build stays green.
 - **Nightly** runs every test three times with `failOnFlakyTests`. Any flaky result fails the
-  run and opens (or updates) the "Nightly run failed" issue.
+  run; a failed scheduled run opens (or updates) the "Nightly run failed" issue. Manual runs
+  (`workflow_dispatch`) report only in the job summary.
 - **Locally**, reproduce with repetition and parallelism, keeping workers at or below the number
   of CPU cores:
 
@@ -52,8 +53,9 @@ test(
 ```
 
 - Quarantined tests are excluded from `npm test`, smoke and regression.
-- They still run in a **non-blocking** CI step and in the nightly run (`npm run test:quarantine`),
-  so the summary always shows how many there are and whether they pass.
+- They still run in a **non-blocking** CI step (even when smoke or regression failed) and in the
+  nightly run (`npm run test:quarantine`), so the summary always shows how many there are and
+  whether they pass.
 - **Exit:** after the fix, the test must pass the nightly run (three repetitions, strict) before
   the tag is removed. A test that stays in quarantine for more than two weeks is either fixed or
   deleted; quarantine is not a place to keep tests forever.

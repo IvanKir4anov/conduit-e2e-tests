@@ -59,8 +59,8 @@ database grows until it is reset, which is harmless.
 
 **Decision.** CI allows one retry. A test that passes only on retry does not fail the build, but
 it is counted as flaky in the job summary and the report. The nightly run executes every test
-three times with `failOnFlakyTests`, so instability that one retry would hide fails there and
-opens an issue. Policy: [stability.md](stability.md).
+three times with `failOnFlakyTests`, so instability that one retry would hide fails there; a
+failed scheduled run opens an issue. Policy: [stability.md](stability.md).
 
 **Consequences.** A single infrastructure hiccup does not block a merge, and flakiness is still
 tracked rather than absorbed.
