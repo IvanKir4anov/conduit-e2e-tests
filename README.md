@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/IvanKir4anov/conduit-e2e-tests/actions/workflows/ci.yml/badge.svg)](https://github.com/IvanKir4anov/conduit-e2e-tests/actions/workflows/ci.yml)
 
+[Русская версия](README.ru.md)
+
 End-to-end test suite for [RealWorld Conduit](https://github.com/realworld-apps/realworld), a
 Medium-like app with a REST API and a web frontend, built with **Playwright + TypeScript**.
 
@@ -9,13 +11,13 @@ It is a demo project, not a generic template. The aim is to show how a test suit
 team can trust it: tests that are isolated, fast to debug, and run against an environment the
 suite controls. A red build should always mean a real problem.
 
-| What                   | How                                                                     |
-| ---------------------- | ----------------------------------------------------------------------- |
-| Application under test | Pinned upstream backend + frontend, started locally with Docker Compose |
-| Test layers            | Typed API client · Page Objects · Playwright fixtures · data factories  |
-| Test types             | API, UI, and hybrid (data via API, behaviour via UI)                    |
-| CI                     | GitHub Actions: lint + typecheck → app in Docker → smoke → regression   |
-| Debugging              | HTML report, trace, screenshot and video for every failed test          |
+| What                   | How                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| Application under test | Pinned upstream backend + frontend, started locally with Docker Compose               |
+| Test layers            | Typed API client · Page Objects · Playwright fixtures · data factories                |
+| Test types             | API, UI, and hybrid (data via API, behaviour via UI)                                  |
+| CI                     | GitHub Actions: lint + typecheck → app in Docker → smoke → regression; strict nightly |
+| Debugging              | HTML report, trace, screenshot and video for every failed test                        |
 
 ## Quick start
 
@@ -25,19 +27,20 @@ Requirements: Node.js 22+, Docker with Compose v2.
 npm ci
 npx playwright install chromium   # on Linux: --with-deps chromium
 npm run env:up      # builds and starts the app at http://localhost:8080, waits until ready
-npm test            # all tests (smoke + regression)
+npm test            # smoke + regression (quarantined tests excluded)
 npm run report      # open the HTML report
 ```
 
-| Command                   | What it does                                                      |
-| ------------------------- | ----------------------------------------------------------------- |
-| `npm run env:up`          | Start the app; creates `.env` with a JWT signing key on first run |
-| `npm run env:down`        | Stop the app, **keep** the database                               |
-| `npm run env:reset`       | Stop the app, **delete** the database volume, start again         |
-| `npm run test:smoke`      | Critical path only (`@smoke`): a quick gate, about 6 tests        |
-| `npm run test:regression` | Everything else (`@regression` and unit tests)                    |
-| `npm run lint`            | ESLint (incl. Playwright rules) + Prettier check                  |
-| `npm run typecheck`       | TypeScript in strict mode                                         |
+| Command                   | What it does                                                               |
+| ------------------------- | -------------------------------------------------------------------------- |
+| `npm run env:up`          | Start the app; creates `.env` with a JWT signing key on first run          |
+| `npm run env:down`        | Stop the app, **keep** the database                                        |
+| `npm run env:reset`       | Stop the app, **delete** the database volume, start again                  |
+| `npm run test:smoke`      | Critical path only (`@smoke`): a quick gate, about 6 tests                 |
+| `npm run test:regression` | Everything else (`@regression` and unit tests)                             |
+| `npm run test:quarantine` | Quarantined tests only (`@quarantine`), see [stability](docs/stability.md) |
+| `npm run lint`            | ESLint (incl. Playwright rules) + Prettier check                           |
+| `npm run typecheck`       | TypeScript in strict mode                                                  |
 
 ## What is covered
 
@@ -149,8 +152,12 @@ to hit the default 5-second assertion timeout.
   setup stops the run with one clear message instead of a wall of "connection refused" errors.
 - **One retry in CI.** A test that passes only on retry does not fail the build, but it is marked
   as _flaky_ in the report and in the job summary. A flaky test is a defect to fix, not noise to
-  live with. A test that cannot be fixed quickly goes into quarantine (a separate, non-blocking
-  run) with a linked issue. The quarantine mechanism and a strict nightly run are planned next.
+  live with.
+- **Strict nightly run.** Every night all tests run three times with `failOnFlakyTests`; a flaky
+  result fails the run and opens an issue.
+- **Quarantine, not skip.** A test that cannot be fixed quickly is tagged `@quarantine` with a
+  linked issue. It leaves the blocking runs but keeps running in a non-blocking step, so it stays
+  visible until fixed. Full policy: [docs/stability.md](docs/stability.md).
 
 ## Debugging a failure
 
@@ -184,6 +191,13 @@ That way an upstream change can never silently point tests at the public API.
 The Angular project has its own Playwright tests. They are not used here. All tests, fixtures and
 Page Objects in this repository were written for this project. See
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for upstream licenses.
+
+## Documentation
+
+- [docs/decisions.md](docs/decisions.md): engineering decisions with their trade-offs, including
+  measured CI timings and why the suite is not sharded yet.
+- [docs/stability.md](docs/stability.md): how flaky tests are detected, fixed and quarantined.
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to write a test here, and the review checklist.
 
 ## License
 
