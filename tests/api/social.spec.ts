@@ -4,7 +4,6 @@ import { expect, test } from '../../src/fixtures';
 test.describe('Social API', () => {
   test('following an author puts their articles into the feed @regression', async ({
     api,
-    userApi,
     article,
     user,
   }) => {
@@ -16,9 +15,9 @@ test.describe('Social API', () => {
     expect(profile.following).toBe(true);
     expect((await readerApi.feed()).map((a) => a.slug)).toContain(article.slug);
 
-    await readerApi.unfollow(user.username);
+    expect((await readerApi.unfollow(user.username)).following).toBe(false);
+    expect((await readerApi.getProfile(user.username)).following).toBe(false);
     expect((await readerApi.feed()).map((a) => a.slug)).not.toContain(article.slug);
-    expect((await userApi.getProfile(reader.username)).following).toBe(false);
   });
 
   test('favoriting updates the flag and the counter @regression', async ({ api, article }) => {

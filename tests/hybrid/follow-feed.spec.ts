@@ -20,7 +20,8 @@ test('following an author shows their article in Your Feed @regression', async (
   const home = new HomePage(page);
   await home.goto();
   await home.yourFeedTab.click();
-  // The reader follows only this author, so the feed contains exactly this article.
-  await expect(home.articlePreview(article.title)).toBeVisible();
-  await expect(home.articlePreviews).toHaveCount(1);
+  // The reader follows only this author, so the feed contains exactly this article. One
+  // assertion on the whole list: checking "title visible" separately could match the Global
+  // Feed that is still on screen while Your Feed loads.
+  await expect(home.articlePreviews.getByRole('heading')).toHaveText([article.title]);
 });
