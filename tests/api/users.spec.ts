@@ -1,3 +1,4 @@
+import { ApiError } from '../../src/api/conduit-api';
 import { buildUser } from '../../src/data/factories';
 import { expect, test } from '../../src/fixtures';
 
@@ -17,6 +18,9 @@ test.describe('Users API', () => {
   });
 
   test('rejects login with a wrong password @smoke', async ({ api, user }) => {
-    await expect(api.login(user.email, 'wrong-password')).rejects.toThrow(/401|403|422/);
+    await expect(api.login(user.email, 'wrong-password')).rejects.toMatchObject({
+      constructor: ApiError,
+      status: 401,
+    });
   });
 });

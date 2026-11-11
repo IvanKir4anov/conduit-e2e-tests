@@ -18,6 +18,11 @@ interface Fixtures {
   userApi: ConduitApi;
   /** An article by `user`, created via the API and deleted after the test. */
   article: Article;
+  /**
+   * Registers an article created through the UI for deletion after the test, even if the
+   * test fails. Call it as soon as the slug is known, before any assertion.
+   */
+  deleteAfterTest: (slug: string) => void;
   /** Browser page already signed in as `user` (session injected, no UI login). */
   authedPage: Page;
 }
@@ -40,7 +45,13 @@ export const test = base.extend<Fixtures>({
   article: async ({ userApi }, use) => {
     const article = await userApi.createArticle(buildArticle());
     await use(article);
-    await deleteIgnoringMissing(userApi, article.slug);
+    await userApi.deleteArticleIfExists(article.slug);
+  },
+
+  deleteAfterTest: async ({ userApi }, use) => {
+    const slugs: string[] = [];
+    await use((slug) => slugs.push(slug));
+    for (const slug of slugs) await userApi.deleteArticleIfExists(slug);
   },
 
   authedPage: async ({ page, user }, use) => {
@@ -61,12 +72,4 @@ export async function signInAs(page: Page, user: User): Promise<void> {
   }, user.token);
   await page.goto('/');
   await expect(new Header(page).userLink(user.username)).toBeVisible();
-}
-
-export async function deleteIgnoringMissing(api: ConduitApi, slug: string): Promise<void> {
-  try {
-    await api.deleteArticle(slug);
-  } catch (error) {
-    if (!String(error).includes(' 404 ')) throw error;
-  }
 }

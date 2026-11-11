@@ -1,3 +1,4 @@
+import { ApiError } from '../../src/api/conduit-api';
 import { buildArticle } from '../../src/data/factories';
 import { expect, test } from '../../src/fixtures';
 
@@ -11,7 +12,10 @@ test.describe('Articles API', () => {
     expect((await userApi.getArticle(created.slug)).title).toBe(input.title);
 
     await userApi.deleteArticle(created.slug);
-    await expect(userApi.getArticle(created.slug)).rejects.toThrow(/404/);
+    await expect(userApi.getArticle(created.slug)).rejects.toMatchObject({
+      constructor: ApiError,
+      status: 404,
+    });
   });
 
   test('comments on an article prepared by a fixture @smoke', async ({ article, userApi }) => {

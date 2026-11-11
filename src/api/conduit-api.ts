@@ -4,6 +4,19 @@ import type { Article, Comment, NewArticle, NewUser, User } from './types';
 
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
+/** A non-2xx API response. Assert on `status`, not on the message text. */
+export class ApiError extends Error {
+  constructor(
+    readonly method: Method,
+    readonly url: string,
+    readonly status: number,
+    readonly responseBody: string,
+  ) {
+    super(`${method} ${url} failed: ${status} ${responseBody}`);
+    this.name = 'ApiError';
+  }
+}
+
 /**
  * Typed client for the RealWorld API. Used to prepare test data and in API tests.
  * Every call fails fast with method, URL, status and response body. The request body is
@@ -44,6 +57,15 @@ export class ConduitApi {
     await this.send('DELETE', `/articles/${slug}`);
   }
 
+  /** Cleanup helper: deletes the article, treating "already gone" (404) as success. */
+  async deleteArticleIfExists(slug: string): Promise<void> {
+    try {
+      await this.deleteArticle(slug);
+    } catch (error) {
+      if (!(error instanceof ApiError && error.status === 404)) throw error;
+    }
+  }
+
   async addComment(slug: string, body: string): Promise<Comment> {
     return (
       await this.send<{ comment: Comment }>('POST', `/articles/${slug}/comments`, {
@@ -60,7 +82,7 @@ export class ConduitApi {
       headers: this.token ? { Authorization: `Token ${this.token}` } : {},
     });
     if (!response.ok()) {
-      throw new Error(`${method} ${url} failed: ${response.status()} ${await safeText(response)}`);
+      throw new ApiError(method, url, response.status(), await safeText(response));
     }
     return (response.status() === 204 ? undefined : await response.json()) as T;
   }
