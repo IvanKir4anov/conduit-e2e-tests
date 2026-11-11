@@ -17,15 +17,29 @@ const lines = [
   '|---|---|---|---|---|---|',
 ];
 let flaky = 0;
+const runErrors = [];
 for (const { name, path } of suites) {
   if (!existsSync(path)) {
     lines.push(`| ${name} | – | – | – | – | did not run |`);
     continue;
   }
-  const { stats } = JSON.parse(readFileSync(path, 'utf8'));
+  const { stats, errors = [] } = JSON.parse(readFileSync(path, 'utf8'));
   flaky += stats.flaky;
+  // Run-level errors (global setup, import errors, worker crashes) are not counted in stats.
+  const failed =
+    errors.length > 0 ? `${stats.unexpected} + ${errors.length} run error(s)` : stats.unexpected;
   lines.push(
-    `| ${name} | ${stats.expected} | ${stats.unexpected} | ${stats.flaky} | ${stats.skipped} | ${(stats.duration / 1000).toFixed(1)} s |`,
+    `| ${name} | ${stats.expected} | ${failed} | ${stats.flaky} | ${stats.skipped} | ${(stats.duration / 1000).toFixed(1)} s |`,
+  );
+  for (const error of errors) {
+    runErrors.push(`**${name}:** ${String(error.message ?? error).split('\n')[0]}`);
+  }
+}
+if (runErrors.length > 0) {
+  lines.push(
+    '',
+    '> ❌ The run failed before or outside the tests:',
+    ...runErrors.map((e) => `> - ${e}`),
   );
 }
 if (flaky > 0) {
