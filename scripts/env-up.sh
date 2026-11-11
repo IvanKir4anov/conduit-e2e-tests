@@ -11,5 +11,10 @@ if [[ ! -f .env ]]; then
   echo "Created .env with a new JWT signing key"
 fi
 
+if ! grep -Eq '^Jwt__SigningKey=.{32,}' .env; then
+  echo "Jwt__SigningKey in .env is missing or too short; delete .env to generate a new one" >&2
+  exit 1
+fi
+
 docker compose up -d --build
 bash scripts/wait-for-app.sh
